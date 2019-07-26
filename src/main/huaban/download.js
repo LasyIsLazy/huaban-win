@@ -1,3 +1,7 @@
+import axios from 'axios'
+import fs from 'fs'
+import path from 'path'
+import systemInfo from '../systemInfo'
 const Board = require('huaban-dl')
 const FAILED = -1
 const PROCESSING = 0
@@ -56,25 +60,28 @@ export async function download(boardId, callback) {
   })
 
   // 下载
-  // const { links } = board
-  // for (let index = 0; index < links.length; index++) {
-  //   const link = links[index];
-  //   console.log(`下载图片: ${link}`)
-  //   const { data } = await axios({
-  //     method: 'GET',
-  //     url: link,
-  //     responseType: 'arraybuffer'
-  //   })
-  //   const directory = path.join(__dirname, '../../../download')
-  //   fs.exists(directory, isExists => {
-  //     if (!isExists) {
-  //       console.log(`创建文件夹：${directory}`)
-  //       fs.mkdir(directory, err => console.warn)
-  //     }
-  //     const imgPath = `${directory}/img${index}.jpeg`
-  //     console.log(`写入路径：${imgPath}`)
-  //     fs.writeFile(imgPath, data, err => { err && console.log(err) })
-  //   })
-  // }
+  const { links } = board
+  for (let index = 0; index < links.length; index++) {
+    const link = links[index]
+    console.log(`下载图片: ${link}`)
+    const { data } = await axios({
+      method: 'GET',
+      url: link,
+      responseType: 'arraybuffer'
+    })
+    const { downloadPath } = systemInfo
+    const directory = path.join(downloadPath, 'huaban-downloads')
+    fs.exists(directory, isExists => {
+      if (!isExists) {
+        console.log(`创建文件夹：${directory}`)
+        fs.mkdir(directory, () => console.error)
+      }
+      const imgPath = `${directory}/img${index}.jpeg`
+      console.log(`写入路径：${imgPath}`)
+      fs.writeFile(imgPath, data, err => {
+        err && console.log(err)
+      })
+    })
+  }
   return
 }

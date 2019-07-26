@@ -11,7 +11,6 @@
     <span v-if="isFailed">失败：</span>
     <span>{{ msg }}</span>
     <el-button @click="openDir">打开</el-button>
-    <system-information></system-information>
   </div>
 </template>
 
