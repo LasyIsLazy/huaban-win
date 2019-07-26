@@ -4,7 +4,7 @@
       <el-form-item label="id">
         <el-input type="number" v-model="boardId"></el-input>
       </el-form-item>
-      <el-button @click="handleBtnClicked">test</el-button>
+      <el-button @click="handleBtnClicked">下载</el-button>
     </el-form>
     <span v-if="isProcessing">处理中：</span>
     <span v-if="isSuccess ">完成：</span>
@@ -17,7 +17,7 @@
 
 <script>
 import SystemInformation from './LandingPage/SystemInformation'
-import { downloadDir } from '../../config'
+import path from 'path'
 const log = console.log
 const { shell, ipcRenderer } = require('electron')
 
@@ -28,7 +28,8 @@ export default {
     return {
       boardId: '',
       status: '',
-      msg: ''
+      msg: '',
+      downloadPath: ''
     }
   },
   computed: {
@@ -59,25 +60,36 @@ export default {
         return
       }
       ipcRenderer.send('download', boardId)
-      ipcRenderer.on('download', (e, arg) => {
-        const { status, msg } = arg
-        this.status = status
-        this.msg = msg
-        log(arg)
-        if (this.isSuccess) {
-          log('notification')
-          ipcRenderer.send('notification', {
-            title: '获取完成',
-            body: '所有信息获取完成'
-          })
-        }
-      })
     },
     openDir() {
       // const os = require("os");
-      const isOpened = shell.showItemInFolder(downloadDir)
-      console.log('Open folder:', downloadDir, isOpened)
+      log(this.downloadPath)
+      const isOpened = shell.showItemInFolder(this.downloadPath)
+      log('Open folder:', this.downloadPath, isOpened)
     }
+  },
+  mounted() {
+    ipcRenderer.on('download', (e, arg) => {
+      const { status, msg } = arg
+      this.status = status
+      this.msg = msg
+      log(arg)
+      if (this.isSuccess) {
+        log('notification')
+        ipcRenderer.send('notification', {
+          title: '获取完成',
+          body: '所有信息获取完成'
+        })
+      }
+    })
+    ipcRenderer.on('getSystemInfo', (e, systemInfo) => {
+      const { downloadPath } = systemInfo
+      log('downloadPath', downloadPath)
+      if (!this.downloadPath) {
+        this.downloadPath = path.join(downloadPath, 'huaban-downloads')
+      }
+    })
+    ipcRenderer.send('getSystemInfo')
   }
 }
 </script>
