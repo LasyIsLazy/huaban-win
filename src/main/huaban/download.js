@@ -4,8 +4,8 @@ const PROCESSING = 0
 const SUCCESS = 1
 
 export async function download(boardId, callback) {
-
-  const generateCallback = status => (msg, argsObj) => callback && callback({ status, msg, args: argsObj })
+  const generateCallback = status => (msg, argsObj) =>
+    callback && callback({ status, msg, args: argsObj })
   const processingCallback = generateCallback(PROCESSING)
   const failedCallback = generateCallback(FAILED)
   const successCallback = generateCallback(SUCCESS)
@@ -21,10 +21,10 @@ export async function download(boardId, callback) {
   }
   processingCallback('初始化完成')
   console.log('初始化完成')
-  console.log(`第 ${board.page} 页图片数量：${firstPageLinks.length}，该页所有链接：`)
+  console.log(
+    `第 ${board.page} 页图片数量：${firstPageLinks.length}，该页所有链接：`
+  )
   console.log(`${firstPageLinks.join('\n')}`)
-
-
 
   // 获取下一页数据
   const next = async () => {

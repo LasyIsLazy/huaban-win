@@ -16,14 +16,13 @@
 </template>
 
 <script>
-import SystemInformation from './LandingPage/SystemInformation'
 import path from 'path'
 const log = console.log
 const { shell, ipcRenderer } = require('electron')
 
 export default {
   name: 'landing-page',
-  components: { SystemInformation },
+  components: {},
   data() {
     return {
       boardId: '',
