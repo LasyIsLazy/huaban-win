@@ -4533,10 +4533,10 @@ https-browserify@^1.0.0:
   resolved "https://registry.npmjs.org/https-browserify/-/https-browserify-1.0.0.tgz#ec06c10e0a34c0f2faf199f7fd7fc78fffd03c73"
   integrity sha1-7AbBDgo0wPL68Zn3/X/Hj//QPHM=
 
-huaban-dl@^2.0.0:
-  version "2.0.0"
-  resolved "http://192.168.14.11:8888/huaban-dl/-/huaban-dl-2.0.0.tgz#7aaada1d4a8bbccc61c75e50fe2c8d0cdff223ae"
-  integrity sha512-mYLOTll20MiYoMMjVrsGo2eNi+xHU+PMkcwsNYXJv8MiClHoMGq6r2NRMWd5R3dHaHPMn5s19TnYcolOAcrG7Q==
+huaban-dl@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.npmjs.org/huaban-dl/-/huaban-dl-2.1.0.tgz#16a92d4e21fa7cb85c82dfdd918ec1ea54acfe61"
+  integrity sha512-1NCGpzXYVU7W0MVBIUI16jDYVvnJO6DW0px0ZP4uORrTd6lTw6M43lObFpelGVxheHKDIzxDrJqkqt8UBE+xrw==
 
 humanize-plus@^1.8.1:
   version "1.8.2"

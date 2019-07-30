@@ -2,86 +2,119 @@ import axios from 'axios'
 import fs from 'fs'
 import path from 'path'
 import systemInfo from '../systemInfo'
-const Board = require('huaban-dl')
+import { ipcMain } from 'electron'
+import Board from 'huaban-dl'
+
 const FAILED = -1
 const PROCESSING = 0
 const SUCCESS = 1
 
-export async function download(boardId, callback) {
-  const generateCallback = status => (msg, argsObj) =>
-    callback && callback({ status, msg, args: argsObj })
-  const processingCallback = generateCallback(PROCESSING)
-  const failedCallback = generateCallback(FAILED)
-  const successCallback = generateCallback(SUCCESS)
-  const board = new Board(boardId)
-  console.log('初始化中……')
-  let firstPageLinks
-  try {
-    const { links } = await board.init()
-    firstPageLinks = links
-  } catch (error) {
-    failedCallback('初始化失败，请检查画板 ID 是否正确')
+let board = null
+
+async function next() {
+  if (!board) {
     return
   }
-  processingCallback('初始化完成')
-  console.log('初始化完成')
-  console.log(
-    `第 ${board.page} 页图片数量：${firstPageLinks.length}，该页所有链接：`
-  )
-  console.log(`${firstPageLinks.join('\n')}`)
-
-  // 获取下一页数据
-  const next = async () => {
-    const data = await board.getNextPage()
-
-    // 结束
-    if (!data) {
-      return
+  const data = await board.getNextPage()
+  return data
+}
+export default async function initDownloadIpc() {
+  ipcMain.on('initBoard', async (evt, boardId) => {
+    console.log(`initBoard: ${boardId}`)
+    board = new Board(boardId)
+    console.log('初始化中……')
+    try {
+      await board.init()
+    } catch (error) {
+      evt.sender.send('initBoard', {
+        boardId,
+        status: FAILED,
+        msg: '画板信息获取失败'
+      })
     }
-
-    const { links } = data
-    const page = board.page
-    const len = links.length
-    processingCallback(`获取第 ${page} 页完成`, { page, len })
-    console.log(`第 ${page} 页图片数量：${len}，该页所有链接：`)
-    console.log(`${links.join('\n')}`)
-
-    // 递归
-    await next()
-  }
-
-  // 递归获取下一页数据
-  await next()
-
-  console.log(`共有图片 ${board.page} 页，${board.amount} 张`)
-  successCallback('获取完成', {
-    page: board.page,
-    amount: board.amount
+    evt.sender.send('initBoard', {
+      boardId,
+      status: SUCCESS,
+      msg: '画板信息获取成功',
+      board
+    })
   })
 
-  // 下载
-  const { links } = board
-  for (let index = 0; index < links.length; index++) {
-    const link = links[index]
-    console.log(`下载图片: ${link}`)
-    const { data } = await axios({
-      method: 'GET',
-      url: link,
-      responseType: 'arraybuffer'
-    })
-    const { downloadPath } = systemInfo
-    const directory = path.join(downloadPath, 'huaban-downloads')
-    fs.exists(directory, isExists => {
-      if (!isExists) {
-        console.log(`创建文件夹：${directory}`)
-        fs.mkdir(directory, () => console.error)
+  ipcMain.on('getAllData', async (evt, boardId) => {
+    console.log(`getAllData: ${boardId}`)
+    if (board && boardId !== board.id) {
+      console.log(`Not init, ${boardId}, ${board}`)
+      return
+    }
+    let isProcessing = true
+    while (isProcessing) {
+      const data = await next(boardId)
+      if (!data) {
+        isProcessing = false
       }
-      const imgPath = `${directory}/img${index}.jpeg`
-      console.log(`写入路径：${imgPath}`)
-      fs.writeFile(imgPath, data, err => {
-        err && console.log(err)
+      evt.sender.send('getAllData', {
+        boardId,
+        status: PROCESSING,
+        board,
+        msg: `获取数据中，已获取图片链接数：${board.links.length}`
       })
+    }
+    evt.sender.send('getAllData', {
+      boardId,
+      status: SUCCESS,
+      board,
+      msg: '数据获取完成'
     })
-  }
-  return
+  })
+
+  ipcMain.on('download', async (evt, boardId) => {
+    console.log(`download: ${boardId}`)
+    if (board && boardId !== board.id) {
+      console.log(`Not init, ${boardId}, ${board}`)
+      return
+    }
+    const { links } = board
+    let isProcessing = true
+    for (let index = 0; index < links.length; index++) {
+      const link = links[index]
+      console.log(`下载图片: ${link}`)
+      const { data } = await axios({
+        method: 'GET',
+        url: link,
+        responseType: 'arraybuffer'
+      })
+      const { downloadPath } = systemInfo
+      const directory = path.join(downloadPath, 'huaban-downloads')
+      isProcessing = index + 1 < links.length
+      fs.exists(directory, isExists => {
+        if (!isExists) {
+          console.log(`创建文件夹：${directory}`)
+          fs.mkdir(directory, () => console.error)
+        }
+        const imgPath = `${directory}/img${index + 1}.jpeg`
+        console.log(`写入路径：${imgPath}`)
+        fs.writeFile(imgPath, data, err => {
+          if (err) {
+            console.log(err)
+            evt.sender.send('download', {
+              boardId,
+              status: FAILED,
+              index,
+              link,
+              msg: `第 ${index + 1} 张图片写入失败`
+            })
+          }
+        })
+        evt.sender.send('download', {
+          boardId,
+          status: isProcessing ? PROCESSING : SUCCESS,
+          index,
+          link,
+          msg: isProcessing
+            ? `正在下载第 ${index + 1} 张图片`
+            : `${index + 1} 张图片下载完成`
+        })
+      })
+    }
+  })
 }

@@ -1,16 +1,28 @@
 <template>
   <div id="wrapper">
-    <el-form>
-      <el-form-item label="id">
+    <el-row>
+      <el-col :span="4">
+        <div>id</div>
+      </el-col>
+      <el-col :span="20">
         <el-input type="number" v-model="boardId"></el-input>
-      </el-form-item>
-      <el-button @click="handleBtnClicked">下载</el-button>
-    </el-form>
+      </el-col>
+    </el-row>
+    <el-button @click="handleInitBtnClicked">获取画板信息</el-button>
+    <el-button @click="handleGetBtnClicked">获取下载链接</el-button>
+    <el-button @click="handleBtnClicked">下载</el-button>
+    <el-button @click="openDir" icon="el-icon-folder-opened">打开</el-button>
     <span v-if="isProcessing">处理中：</span>
     <span v-if="isSuccess ">完成：</span>
     <span v-if="isFailed">失败：</span>
     <span>{{ msg }}</span>
-    <el-button @click="openDir">打开</el-button>
+    <el-form>
+      <el-form-item
+        v-for="item in BoardFormItems"
+        :key="item.label"
+        :label="item.label"
+      >{{item.value}}</el-form-item>
+    </el-form>
   </div>
 </template>
 
@@ -18,6 +30,9 @@
 import path from 'path'
 const log = console.log
 const { shell, ipcRenderer } = require('electron')
+const FAILED = -1
+const PROCESSING = 0
+const SUCCESS = 1
 
 export default {
   name: 'landing-page',
@@ -27,26 +42,60 @@ export default {
       boardId: '',
       status: '',
       msg: '',
-      downloadPath: ''
+      downloadPath: '',
+      board: {}
     }
   },
   computed: {
     isProcessing() {
-      return this.status === 0
+      return this.status === PROCESSING
     },
     isFailed() {
-      return this.status === -1
+      return this.status === FAILED
     },
     isSuccess() {
-      return this.status === 1
+      return this.status === SUCCESS
+    },
+    amount() {
+      return this.board && this.board.amount
+    },
+    title() {
+      return this.board && this.board.title
+    },
+    id() {
+      return this.board && this.board.id
+    },
+    BoardFormItems() {
+      return [
+        { label: '画板id', value: this.id },
+        { label: '标题', value: this.title }
+      ]
     }
   },
   methods: {
     open(link) {
       this.$electron.shell.openExternal(link)
     },
+    handleInitBtnClicked() {
+      const boardId = parseInt(this.boardId)
+      // NaN
+      if (boardId !== boardId) {
+        log('Wrong input boardId')
+        return
+      }
+      ipcRenderer.send('initBoard', boardId)
+    },
+    handleGetBtnClicked() {
+      log('handleGetBtnClicked')
+      const boardId = parseInt(this.boardId)
+      if (boardId !== boardId) {
+        log('Wrong input boardId')
+        return
+      }
+      ipcRenderer.send('getAllData', boardId)
+    },
     handleBtnClicked() {
-      log('clicked')
+      log('download clicked')
       if (this.isProcessing) {
         log('processing')
         return
@@ -64,117 +113,44 @@ export default {
       log(this.downloadPath)
       const isOpened = shell.showItemInFolder(this.downloadPath)
       log('Open folder:', this.downloadPath, isOpened)
+    },
+    initIpc() {
+      ipcRenderer.on('getAllData', (e, data) => {
+        const { status, board, msg } = data
+        this.status = status
+        this.msg = msg
+        this.board = board
+        log(data)
+      })
+
+      ipcRenderer.on('initBoard', (e, data) => {
+        const { status, board, msg } = data
+        this.status = status
+        this.msg = msg
+        this.board = board
+        log(data)
+      })
+
+      ipcRenderer.on('download', (e, data) => {
+        const { status, board, msg } = data
+        this.status = status
+        this.msg = msg
+        this.board = board
+        log(data)
+      })
+
+      ipcRenderer.on('getSystemInfo', (e, systemInfo) => {
+        const { downloadPath } = systemInfo
+        log('downloadPath', downloadPath)
+        if (!this.downloadPath) {
+          this.downloadPath = path.join(downloadPath, 'huaban-downloads')
+        }
+      })
+      ipcRenderer.send('getSystemInfo')
     }
   },
   mounted() {
-    ipcRenderer.on('download', (e, arg) => {
-      const { status, msg } = arg
-      this.status = status
-      this.msg = msg
-      log(arg)
-      if (this.isSuccess) {
-        log('notification')
-        ipcRenderer.send('notification', {
-          title: '获取完成',
-          body: '所有信息获取完成'
-        })
-      }
-    })
-    ipcRenderer.on('getSystemInfo', (e, systemInfo) => {
-      const { downloadPath } = systemInfo
-      log('downloadPath', downloadPath)
-      if (!this.downloadPath) {
-        this.downloadPath = path.join(downloadPath, 'huaban-downloads')
-      }
-    })
-    ipcRenderer.send('getSystemInfo')
+    this.initIpc()
   }
 }
 </script>
-
-<style>
-@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro');
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Source Sans Pro', sans-serif;
-}
-
-#wrapper {
-  background: radial-gradient(
-    ellipse at top left,
-    rgba(255, 255, 255, 1) 40%,
-    rgba(229, 229, 229, 0.9) 100%
-  );
-  height: 100vh;
-  padding: 60px 80px;
-  width: 100vw;
-}
-
-#logo {
-  height: auto;
-  margin-bottom: 20px;
-  width: 420px;
-}
-
-main {
-  display: flex;
-  justify-content: space-between;
-}
-
-main > div {
-  flex-basis: 50%;
-}
-
-.left-side {
-  display: flex;
-  flex-direction: column;
-}
-
-.welcome {
-  color: #555;
-  font-size: 23px;
-  margin-bottom: 10px;
-}
-
-.title {
-  color: #2c3e50;
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 6px;
-}
-
-.title.alt {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.doc p {
-  color: black;
-  margin-bottom: 10px;
-}
-
-.doc button {
-  font-size: 0.8em;
-  cursor: pointer;
-  outline: none;
-  padding: 0.75em 2em;
-  border-radius: 2em;
-  display: inline-block;
-  color: #fff;
-  background-color: #4fc08d;
-  transition: all 0.15s ease;
-  box-sizing: border-box;
-  border: 1px solid #4fc08d;
-}
-
-.doc button.alt {
-  color: #42b983;
-  background-color: transparent;
-}
-</style>
