@@ -26,9 +26,11 @@
 import path from 'path'
 const log = console.log
 const { shell, ipcRenderer } = require('electron')
-const FAILED = -1
-const PROCESSING = 0
-const SUCCESS = 1
+import {
+  PROCESS_FAILED,
+  PROCESS_PROCESSING,
+  PROCESS_SUCCESS
+} from '../../common/constant.js'
 
 export default {
   name: 'landing-page',
@@ -44,13 +46,13 @@ export default {
   },
   computed: {
     isProcessing() {
-      return this.status === PROCESSING
+      return this.status === PROCESS_PROCESSING
     },
     isFailed() {
-      return this.status === FAILED
+      return this.status === PROCESS_FAILED
     },
     isSuccess() {
-      return this.status === SUCCESS
+      return this.status === PROCESS_SUCCESS
     },
     amount() {
       return this.board && this.board.amount

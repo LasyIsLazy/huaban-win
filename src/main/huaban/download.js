@@ -4,10 +4,11 @@ import path from 'path'
 import systemInfo from '../systemInfo'
 import { ipcMain } from 'electron'
 import Board from 'huaban-dl'
-
-const FAILED = -1
-const PROCESSING = 0
-const SUCCESS = 1
+import {
+  PROCESS_FAILED,
+  PROCESS_PROCESSING,
+  PROCESS_SUCCESS
+} from '../../common/constant.js'
 
 let board = null
 
@@ -28,13 +29,13 @@ export default async function initDownloadIpc() {
     } catch (error) {
       evt.sender.send('initBoard', {
         boardId,
-        status: FAILED,
+        status: PROCESS_FAILED,
         msg: '画板信息获取失败'
       })
     }
     evt.sender.send('initBoard', {
       boardId,
-      status: SUCCESS,
+      status: PROCESS_SUCCESS,
       msg: '画板信息获取成功',
       board
     })
@@ -54,14 +55,14 @@ export default async function initDownloadIpc() {
       }
       evt.sender.send('getAllData', {
         boardId,
-        status: PROCESSING,
+        status: PROCESS_PROCESSING,
         board,
         msg: `获取数据中，已获取图片链接数：${board.links.length}`
       })
     }
     evt.sender.send('getAllData', {
       boardId,
-      status: SUCCESS,
+      status: PROCESS_SUCCESS,
       board,
       msg: '数据获取完成'
     })
@@ -99,7 +100,7 @@ export default async function initDownloadIpc() {
             evt.sender.send('download', {
               boardId,
               board,
-              status: FAILED,
+              status: PROCESS_FAILED,
               index,
               link,
               msg: `第 ${index + 1} 张图片写入失败`
@@ -109,7 +110,7 @@ export default async function initDownloadIpc() {
         evt.sender.send('download', {
           boardId,
           board,
-          status: isProcessing ? PROCESSING : SUCCESS,
+          status: isProcessing ? PROCESS_PROCESSING : PROCESS_SUCCESS,
           index,
           link,
           msg: isProcessing
