@@ -98,6 +98,7 @@ export default async function initDownloadIpc() {
             console.log(err)
             evt.sender.send('download', {
               boardId,
+              board,
               status: FAILED,
               index,
               link,
@@ -107,6 +108,7 @@ export default async function initDownloadIpc() {
         })
         evt.sender.send('download', {
           boardId,
+          board,
           status: isProcessing ? PROCESSING : SUCCESS,
           index,
           link,

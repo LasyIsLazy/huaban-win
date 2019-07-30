@@ -1,27 +1,23 @@
 <template>
-  <div id="wrapper">
-    <el-row>
-      <el-col :span="4">
-        <div>id</div>
-      </el-col>
-      <el-col :span="20">
+  <div class="wrapper">
+    <el-form label-width="80px">
+      <el-form-item label="id">
         <el-input type="number" v-model="boardId"></el-input>
-      </el-col>
-    </el-row>
-    <el-button @click="handleInitBtnClicked">获取画板信息</el-button>
-    <el-button @click="handleGetBtnClicked">获取下载链接</el-button>
-    <el-button @click="handleBtnClicked">下载</el-button>
-    <el-button @click="openDir" icon="el-icon-folder-opened">打开</el-button>
-    <span v-if="isProcessing">处理中：</span>
-    <span v-if="isSuccess ">完成：</span>
-    <span v-if="isFailed">失败：</span>
-    <span>{{ msg }}</span>
-    <el-form>
-      <el-form-item
-        v-for="item in BoardFormItems"
-        :key="item.label"
-        :label="item.label"
-      >{{item.value}}</el-form-item>
+      </el-form-item>
+      <el-form-item label="操作">
+        <el-button @click="handleInitBtnClicked">获取画板信息</el-button>
+        <el-button @click="handleGetBtnClicked">获取下载链接</el-button>
+        <el-button @click="handleBtnClicked">下载</el-button>
+        <el-button @click="openDir" icon="el-icon-folder-opened">打开</el-button>
+      </el-form-item>
+      <el-form-item label="状态">
+        <span v-if="isProcessing">处理中：</span>
+        <span v-if="isSuccess ">完成：</span>
+        <span v-if="isFailed">失败：</span>
+        <span>{{ msg }}</span>
+      </el-form-item>
+      <el-form-item label="画板 ID">{{this.boardId}}</el-form-item>
+      <el-form-item label="标题">{{this.title}}</el-form-item>
     </el-form>
   </div>
 </template>
@@ -64,12 +60,6 @@ export default {
     },
     id() {
       return this.board && this.board.id
-    },
-    BoardFormItems() {
-      return [
-        { label: '画板id', value: this.id },
-        { label: '标题', value: this.title }
-      ]
     }
   },
   methods: {
@@ -154,3 +144,10 @@ export default {
   }
 }
 </script>
+<style scoped>
+.wrapper {
+  width: 70%;
+  margin: 0 auto;
+}
+</style>
+
