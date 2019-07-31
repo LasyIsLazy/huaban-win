@@ -2,12 +2,12 @@
   <div class="wrapper">
     <el-form label-width="80px">
       <el-form-item label="id">
-        <el-input type="number" v-model="boardId"></el-input>
+        <el-input type="number" v-model="boardId" @input="handleInput"></el-input>
       </el-form-item>
       <el-form-item label="操作">
-        <el-button @click="handleInitBtnClicked">获取画板信息</el-button>
-        <el-button @click="handleGetBtnClicked">获取下载链接</el-button>
-        <el-button @click="handleBtnClicked">下载</el-button>
+        <el-button @click="handleInitBtnClicked" :disabled="curProcess===PROCESS_NOT_INPUTED">获取画板信息</el-button>
+        <el-button @click="handleGetBtnClicked" :disabled="curProcess < PROCESS_INFO_GETED">获取下载链接</el-button>
+        <el-button @click="handleBtnClicked" :disabled="curProcess !== PROCESS_LINK_GETED">下载</el-button>
         <el-button @click="openDir" icon="el-icon-folder-opened">打开</el-button>
       </el-form-item>
       <el-form-item label="状态">
@@ -32,6 +32,13 @@ import {
   PROCESS_SUCCESS
 } from '../../common/constant.js'
 
+const PROCESS_NOT_INPUTED = 0
+const PROCESS_INPUTED = 1
+const PROCESS_INFO_GETED = 2
+const PROCESS_LINK_GETED = 3
+const PROCESS_DOWNLOADING = 4
+const PROCESS_DOWNLOAD_FINISH = 4
+
 export default {
   name: 'landing-page',
   components: {},
@@ -41,7 +48,14 @@ export default {
       status: '',
       msg: '',
       downloadPath: '',
-      board: {}
+      board: {},
+      PROCESS_NOT_INPUTED,
+      PROCESS_INPUTED,
+      PROCESS_INFO_GETED,
+      PROCESS_LINK_GETED,
+      PROCESS_DOWNLOADING,
+      PROCESS_DOWNLOAD_FINISH,
+      curProcess: PROCESS_NOT_INPUTED
     }
   },
   computed: {
@@ -69,22 +83,11 @@ export default {
       this.$electron.shell.openExternal(link)
     },
     handleInitBtnClicked() {
-      const boardId = parseInt(this.boardId)
-      // NaN
-      if (boardId !== boardId) {
-        log('Wrong input boardId')
-        return
-      }
-      ipcRenderer.send('initBoard', boardId)
+      ipcRenderer.send('initBoard', this.boardId)
     },
     handleGetBtnClicked() {
       log('handleGetBtnClicked')
-      const boardId = parseInt(this.boardId)
-      if (boardId !== boardId) {
-        log('Wrong input boardId')
-        return
-      }
-      ipcRenderer.send('getAllData', boardId)
+      ipcRenderer.send('getAllData', this.boardId)
     },
     handleBtnClicked() {
       log('download clicked')
@@ -92,13 +95,14 @@ export default {
         log('processing')
         return
       }
-      const boardId = parseInt(this.boardId)
-      // NaN
-      if (boardId !== boardId) {
-        log('Wrong input boardId')
+      ipcRenderer.send('download', this.boardId)
+    },
+    handleInput() {
+      if (!this.boardId) {
+        this.curProcess = PROCESS_NOT_INPUTED
         return
       }
-      ipcRenderer.send('download', boardId)
+      this.curProcess = PROCESS_INPUTED
     },
     openDir() {
       // const os = require("os");
@@ -113,6 +117,7 @@ export default {
         this.msg = msg
         this.board = board
         log(data)
+        this.curProcess = PROCESS_LINK_GETED
       })
 
       ipcRenderer.on('initBoard', (e, data) => {
@@ -121,6 +126,7 @@ export default {
         this.msg = msg
         this.board = board
         log(data)
+        this.curProcess = PROCESS_INFO_GETED
       })
 
       ipcRenderer.on('download', (e, data) => {
