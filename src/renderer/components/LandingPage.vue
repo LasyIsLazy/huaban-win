@@ -16,8 +16,12 @@
         <span v-if="isFailed">失败：</span>
         <span>{{ msg }}</span>
       </el-form-item>
-      <el-form-item label="画板 ID">{{this.boardId}}</el-form-item>
-      <el-form-item label="标题">{{this.title}}</el-form-item>
+      <el-form-item label="画板 ID">{{boardId}}</el-form-item>
+      <el-form-item label="标题">{{title}}</el-form-item>
+      <el-form-item label="下载位置">
+        {{downloadPath}}
+        <el-button @click="handleSetPathClicked">更改位置</el-button>
+      </el-form-item>
     </el-form>
   </div>
 </template>
@@ -95,7 +99,7 @@ export default {
         log('processing')
         return
       }
-      ipcRenderer.send('download', this.boardId)
+      ipcRenderer.send('download', this.boardId, this.title)
     },
     handleInput() {
       if (!this.boardId) {
@@ -104,10 +108,13 @@ export default {
       }
       this.curProcess = PROCESS_INPUTED
     },
+    handleSetPathClicked() {
+      ipcRenderer.send('setDownloadPath')
+    },
     openDir() {
-      // const os = require("os");
-      log(this.downloadPath)
-      const isOpened = shell.showItemInFolder(this.downloadPath)
+      const isOpened = shell.showItemInFolder(
+        path.join(this.downloadPath, this.title || '')
+      )
       log('Open folder:', this.downloadPath, isOpened)
     },
     initIpc() {
@@ -141,10 +148,15 @@ export default {
         const { downloadPath } = systemInfo
         log('downloadPath', downloadPath)
         if (!this.downloadPath) {
-          this.downloadPath = path.join(downloadPath, 'huaban-downloads')
+          this.downloadPath = downloadPath
         }
       })
       ipcRenderer.send('getSystemInfo')
+
+      ipcRenderer.on('updateDownloadPath', (e, downloadPath) => {
+        console.log('updateDownloadPath', downloadPath)
+        this.downloadPath = downloadPath
+      })
     }
   },
   mounted() {

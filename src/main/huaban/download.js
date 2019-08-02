@@ -68,8 +68,8 @@ export default async function initDownloadIpc() {
     })
   })
 
-  ipcMain.on('download', async (evt, boardId) => {
-    console.log(`download: ${boardId}`)
+  ipcMain.on('download', async (evt, boardId, title) => {
+    console.log(`download: ${boardId}`, title)
     if (board && boardId !== board.id) {
       console.log(`Not init, ${boardId}, ${board}`)
       return
@@ -85,7 +85,7 @@ export default async function initDownloadIpc() {
         responseType: 'arraybuffer'
       })
       const { downloadPath } = systemInfo
-      const directory = path.join(downloadPath, 'huaban-downloads')
+      const directory = path.join(downloadPath, title)
       isProcessing = index + 1 < links.length
       fs.exists(directory, isExists => {
         if (!isExists) {

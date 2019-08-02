@@ -6,4 +6,8 @@ export function initSystemInfo() {
   console.log(info)
 }
 
+export function updateDownloadPath(downloadPath) {
+  info.downloadPath = downloadPath
+}
+
 export default info
