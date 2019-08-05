@@ -20,13 +20,20 @@
   },
   "build": {
     "productName": "huaban-win",
-    "appId": "com.example.yourapp",
+    "appId": "com.lasy.huaban",
     "directories": {
       "output": "build"
     },
     "files": [
       "dist/electron/**/*"
     ],
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
     "dmg": {
       "contents": [
         {
@@ -46,7 +53,8 @@
       "icon": "build/icons/icon.icns"
     },
     "win": {
-      "icon": "build/icons/icon.ico"
+      "icon": "build/icons/icon.ico",
+      "target": "nsis"
     },
     "linux": {
       "icon": "build/icons"
