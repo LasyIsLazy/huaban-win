@@ -21,7 +21,7 @@ function init() {
     const filePaths = dialog.showOpenDialog({
       properties: ['openDirectory']
     })
-    if (!filePaths.length) return
+    if (!filePaths || !filePaths.length) return
     const downloadPath = filePaths[0]
     console.log('setDownloadPath', downloadPath)
     updateDownloadPath(downloadPath)
