@@ -20,6 +20,8 @@ async function next() {
   return data
 }
 export default async function initDownloadIpc() {
+
+  // 初始化画板：获取画板的信息和第一页数据
   ipcMain.on('initBoard', async (evt, boardId) => {
     console.log(`initBoard: ${boardId}`)
     board = new Board(boardId)
@@ -41,6 +43,7 @@ export default async function initDownloadIpc() {
     })
   })
 
+  // 获取所有数据
   ipcMain.on('getAllData', async (evt, boardId) => {
     console.log(`getAllData: ${boardId}`)
     if (board && boardId !== board.id) {
@@ -64,10 +67,11 @@ export default async function initDownloadIpc() {
       boardId,
       status: PROCESS_SUCCESS,
       board,
-      msg: '数据获取完成'
+      msg: '图片链接获取完成'
     })
   })
 
+  // 下载画板图片
   ipcMain.on('download', async (evt, boardId, title) => {
     console.log(`download: ${boardId}`, title)
     if (board && boardId !== board.id) {
@@ -114,7 +118,7 @@ export default async function initDownloadIpc() {
           index,
           link,
           msg: isProcessing
-            ? `正在下载第 ${index + 1} 张图片`
+            ? `正在下载第 ${index + 1} / ${links.length} 张图片`
             : `${index + 1} 张图片下载完成`
         })
       })

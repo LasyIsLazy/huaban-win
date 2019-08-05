@@ -5,6 +5,9 @@ const info = {}
 const configPath = path.join(app.getPath('userData'), 'config.json')
 const systemDownloadsPath = app.getPath('downloads')
 
+/**
+ * 初始化获取系统信息
+ */
 export function initSystemInfo() {
   console.log('configPath', configPath)
   fs.exists(configPath, exists => {
@@ -24,6 +27,10 @@ export function initSystemInfo() {
   })
 }
 
+/**
+ * 更新下载路径
+ * @param {string} downloadPath 下载路径
+ */
 export function updateDownloadPath(downloadPath) {
   info.downloadPath = downloadPath
   let data = {}

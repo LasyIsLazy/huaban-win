@@ -11,12 +11,18 @@
         <el-button @click="openDir" icon="el-icon-folder-opened">打开</el-button>
       </el-form-item>
       <el-form-item label="状态">
-        <span v-if="isProcessing">处理中：</span>
-        <span v-if="isSuccess ">完成：</span>
-        <span v-if="isFailed">失败：</span>
+        <span v-if="isProcessing">
+          <i class="el-icon-loading"></i>
+        </span>
+        <span v-if="isSuccess ">
+          <i class="el-icon-success"></i>
+        </span>
+        <span v-if="isFailed">
+          <i class="el-icon-error"></i>
+        </span>
         <span>{{ msg }}</span>
       </el-form-item>
-      <el-form-item label="画板 ID">{{boardId}}</el-form-item>
+      <el-form-item label="画板 ID">{{board && board.id}}</el-form-item>
       <el-form-item label="标题">{{title}}</el-form-item>
       <el-form-item label="数量">{{board && board.originData && board.originData.pin_count}}</el-form-item>
       <el-form-item label="下载位置">
@@ -88,18 +94,19 @@ export default {
       this.$electron.shell.openExternal(link)
     },
     handleInitBtnClicked() {
+      this.status = PROCESS_PROCESSING
       ipcRenderer.send('initBoard', this.boardId)
     },
     handleGetBtnClicked() {
-      log('handleGetBtnClicked')
+      this.status = PROCESS_PROCESSING
       ipcRenderer.send('getAllData', this.boardId)
     },
     handleBtnClicked() {
-      log('download clicked')
       if (this.isProcessing) {
         log('processing')
         return
       }
+      this.status = PROCESS_PROCESSING
       ipcRenderer.send('download', this.boardId, this.title)
     },
     handleInput() {
@@ -169,6 +176,9 @@ export default {
 .wrapper {
   width: 70%;
   margin: 0 auto;
+}
+.el-icon-success {
+  color: green;
 }
 </style>
 
