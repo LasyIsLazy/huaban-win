@@ -18,6 +18,7 @@
       </el-form-item>
       <el-form-item label="画板 ID">{{boardId}}</el-form-item>
       <el-form-item label="标题">{{title}}</el-form-item>
+      <el-form-item label="数量">{{board && board.originData && board.originData.pin_count}}</el-form-item>
       <el-form-item label="下载位置">
         {{downloadPath}}
         <el-button @click="handleSetPathClicked">更改位置</el-button>
